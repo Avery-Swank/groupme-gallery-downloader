@@ -1,0 +1,9 @@
+{
+    "name": "groupme-gallery-downloader",
+    "version": "1.0.0",
+    "main": "app.js",
+    "dependencies": {
+        "chromedriver": "^78.0.1",
+        "selenium-webdriver": "^4.0.0-alpha.5"
+    }
+}
