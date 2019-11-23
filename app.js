@@ -36,11 +36,9 @@ const main = async () => {
     // Read the data from "setup.json"
     const setupData = require('./setup.json')
     const browserType = setupData.browserType
-    const email = setupData.emailUsername
-    const password = setupData.password
     const chatName = setupData.chatName
 
-    if(browserType.length == 0 || email.length == 0 || password.length == 0 || chatName.length == 0){
+    if(browserType.length == 0 || chatName.length == 0){
         console.log(`Invalid Setup data. \n ${JSON.stringify(setupData)}`)
         return null
     }
@@ -60,23 +58,10 @@ const main = async () => {
 
         // Open Browser
         await driver.get(`https://web.groupme.com/chats`)
-        //await driver.manage().window().maximize()
+
+        // At this point, the user logins into their GroupMe account by hand. Then there is no need
+        // to manage a username and password
         
-        // Enter Email/User name
-        const usernameField = await driver.findElement(By.css(`[ng-model="username"]`))
-        await usernameField.sendKeys(email)
-
-        // Enter Password
-        const passwordField = await driver.findElement(By.css(`[ng-model="password"]`))
-        await passwordField.sendKeys(password)
-
-        // Click Login
-        const loginButton = await driver.findElement(By.css(`[type="submit"]`))
-        await loginButton.click()
-
-        // **Then presents 2FA**
-        // **Needs to be done manually to get past 2FA**
-
         // END Login into a groupme account --------------------------------------------------
         // BEGIN Navigate to GroupMe Gallery -------------------------------------------------
 
