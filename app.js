@@ -41,6 +41,11 @@ const main = async () => {
 
     console.log(`Running groupme-gallery-downloader with data: \n ${JSON.stringify(setupData)}`)
 
+    const start = new Date()
+    var mediaCount = 0
+    var imageCount = 0
+    var videoCount = 0
+
     try{
     
         // BEGIN Login into a groupme account ------------------------------------------------
@@ -100,45 +105,39 @@ const main = async () => {
         
         // Will continually add images until there is no 'next button'
         // ie there are no more images
-        var count = 0
         while(true){
 
             try{
                 var image = null
                 var video = null
-                var validAddr = false
-                var mediaAddr = ""
 
                 // Wait for image or video to show
                 await waitUntilClickable(driver, `[class="current-media"]`)
                 
                 // Check if the media is a image or a video and grab the src accordingly
                 // Otherwise wait and try again because it is a given that something will show up
-                while(!validAddr){
+                // Helps slow down execution
+                while(true){
                     try{
-                        image = await driver.findElement(By.xpath(`//div[@class="current-media"]//img`))
-                    } catch(e) {
-                        console.log(`Media is not an image`)
-                    }
+                        image = await driver.findElement(By.xpath(`//div[@class="media-wrap"]/img`))
+                        imageCount++
+                    } catch(e) {}
     
                     try{
-                        video = await driver.findElement(By.xpath(`//div[@class="current-media"]//video/source`))
-                    } catch(e) {
-                        console.log(`Media is not a video`)
-                    }
+                        video = await driver.findElement(By.xpath(`//div[@class="video-wrap"]/video`))
+                        videoCount++
+                    } catch(e) {}
 
                     if(!(image == null && video == null)){
-                        mediaAddr = (image != null) ? await image.getAttribute(`src`) : await video.getAttribute(`src`)
-                        validAddr = !mediaAddr.includes(`gm-hash-spinner`)
-                    } else {
-                        validAddr = false
+                        break
                     }
-
-                    // Buffer inbetween scans to determine images from videos. Prevents element stale references for loading pages
-                    await driver.sleep(500)
                 }
 
-                console.log(`groupme-gallery-downloader: Media Index ${count}: ${mediaAddr}`)
+                if(image != null)
+                    console.log(`groupme-gallery-downloader: Gallery Media Index ${mediaCount} - Image Saved`)
+
+                if(video != null)
+                    console.log(`groupme-gallery-downloader: Gallery Media Index ${mediaCount} - Video Saved`)
 
                 // Click Download button
                 await waitUntilClickable(driver, `[ng-click="download()"]`)
@@ -149,9 +148,9 @@ const main = async () => {
                 const nextButton = await driver.findElement(By.css(`[ng-click="next(); $event.stopPropagation();"]`))
                 await nextButton.click()
 
-                count++
+                mediaCount++
             } catch (e) {
-                console.log(`groupme-gallery-downloader: All images have been saved`)
+                console.log(`groupme-gallery-downloader: All media have been saved`)
                 break
             }
         }
@@ -171,6 +170,14 @@ const main = async () => {
 
         console.log(`groupme-gallery-downloader error: ${e}`)
     }
+
+    const end = new Date()
+    var executionTime = (end - start) / 1000
+
+    console.log(`\n`)
+    console.log(`groupme-gallery-downloader: execution time: ${executionTime} seconds`)
+    console.log(`groupme-gallery-downloader: images saved: ${imageCount}`)
+    console.log(`groupme-gallery-downloader: videos saved: ${videoCount}`)
 
     return null
 }
