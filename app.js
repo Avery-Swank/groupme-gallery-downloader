@@ -5,6 +5,7 @@ const { chromedriver } = require('chromedriver')
 /**
  * @function waitUntilClickable
  * @description Wait until an element can be clickable. Is great for waiting for front-end pages to load. 
+ *              Works for finding elements via css or xpath. Can be easily extended to more types
  *              WARNING: Is prone to running continuously forever
  * @param {*} driver 
  * @param {*} path 
@@ -38,6 +39,11 @@ const main = async () => {
     const email = setupData.emailUsername
     const password = setupData.password
     const chatName = setupData.chatName
+
+    if(browserType.length == 0 || email.length == 0 || password.length == 0 || chatName.length == 0){
+        console.log(`Invalid Setup data. \n ${JSON.stringify(setupData)}`)
+        return null
+    }
 
     console.log(`Running groupme-gallery-downloader with data: \n ${JSON.stringify(setupData)}`)
 
