@@ -9,10 +9,14 @@ At first, I read and learned about GroupMe's API and REST services to try to run
 ## How It Works
 This project is indended to serve as a standalone project that performs the following steps.
 1. Opens a Chrome browser instance on your machine
-2. Logs into a GroupMe account
-3. Opens a particular GroupMe group and its gallery
-4. **Traverses through all media** in that group's gallery and clicks 'Download'
-5. Open your `C:/.../Downloads` folder and see all of the gallery data. Then, drag and drop everything into your own folder outside of downloads.
+2. The User Logs into their GroupMe account 
+
+**NOTE:** This part may be automated for entering a username and password, but I did not want to manipulate those data points, also may have to manually type your GroupMe PIN for 2FA. Easiest to let the user do that once
+
+3. From here, the program takes over and searches for the desired chat name
+4. Opens a particular GroupMe group and its gallery
+5. **Traverses through all media** in that group's gallery and clicks 'Download'
+6. Open your `C:/.../Downloads` folder and see all of the gallery data. Then, drag and drop everything into your own folder outside of downloads.
 
 ## Project Setup
 ### Getting Started
@@ -28,15 +32,11 @@ Again, the goal of this project is to make it easy for anyone, with or without c
 ```
 {
     "browserType": "chrome",
-    "emailUsername": "mikeschmidt@gmail.com",
-    "password": "password123",
     "chatName": "My first chat"
 }
 ```
 
  - **browserType**: The type of browser to load on your machine. Currently only works for a Chrome Browser.
- - **emailUsername**: Your GroupMe email or username for login.
- - **password**: Your GroupMe password for login.
  - **chatName**: The name of the GroupMe group gallery data you want to download.
 
 ## Next Developments
