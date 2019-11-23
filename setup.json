@@ -1,5 +1,5 @@
 {
-    "browserType": "",
+    "browserType": "chrome",
     "emailUsername": "",
     "password": "",
     "chatName": ""
