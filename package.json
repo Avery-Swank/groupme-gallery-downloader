@@ -4,6 +4,7 @@
     "main": "app.js",
     "dependencies": {
         "chromedriver": "^78.0.1",
+        "downloads-folder": "^1.0.2",
         "selenium-webdriver": "^4.0.0-alpha.5"
     }
 }
