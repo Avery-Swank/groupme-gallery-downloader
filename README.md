@@ -1,7 +1,7 @@
 # groupme-gallery-downloader
 A front-end web application to access and download all of a GroupMe's gallery data.
 
-## Statement
+## Summary
 I wanted a way to save all of a GroupMe's gallery data. Groupme does not have any built-in functionality saving an entire group's gallery without going into each gallery image and video and downloading it by hand. Myself being a programmer and being 'lazy' that I did not want to do this by hand for every GroupMe where I wanted to save memories, I wrote this program to automate that process.
 
 At first, I read and learned about GroupMe's API and REST services to try to run everything through the backend, which was great and very interesting. However, I wanted to create a tool that anyone could easily use to download their GroupMe gallery data. I decided early on to put a huge focus on simplicity and ease of use. Thus, using a web automation framework like Selenium and accessing GroupMe through the front-end seemed to be the easiest to code, easiest to maintain or manipulate, and easiest to automate downloads. 
@@ -33,17 +33,14 @@ Again, the goal of this project is to make it easy for anyone, with or without c
 ```
 {
     "browserType": "chrome",
-    "chatName": "My first chat"
+    "chatName": "My first chat",
+    "sendInfoToChat": false
 }
 ```
 
  - **browserType**: The type of browser to load on your machine. Currently only works for a Chrome Browser.
  - **chatName**: The name of the GroupMe group gallery data you want to download.
-
-## Next Developments
- - Add more types of browsers beyond chrome: firefox, internet explorer, etc.
- - Save all of the gallery data in a folder within Downloads to prevent a cluttered Downloads directory
- - Add option to download a particular number of recent media rather than the entire gallery
+ - **sendInfoToChat**: Specify if you want to send execution details to the GroupMe group you are saving.
 
 ## Software Reference
  - [NodeJS](https://nodejs.org/en/)
