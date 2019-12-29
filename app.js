@@ -1,5 +1,6 @@
 
 const { Builder, By } = require('selenium-webdriver')
+const { Key } = require('selenium-webdriver/lib/input')
 const { chromedriver } = require('chromedriver')
 
 /**
@@ -37,6 +38,7 @@ const main = async () => {
     const setupData = require('./setup.json')
     const browserType = setupData.browserType
     const chatName = setupData.chatName
+    const sendInfo = setupData.sendInfoToChat
 
     if(browserType.length == 0 || chatName.length == 0){
         console.log(`Invalid Setup data. \n ${JSON.stringify(setupData)}`)
@@ -85,7 +87,7 @@ const main = async () => {
         const galleryButton = await driver.findElement(By.css(`[ng-click="showGallery()"]`))
         await galleryButton.click()
         // END Navigate to GroupMe Gallery ---------------------------------------------------
-        // BEGIN Saving Gallery Photos -------------------------------------------------------
+        // BEGIN Saving Gallery Media -------------------------------------------------------
 
         console.log(`groupme-gallery-downloader: Clicked gallery in group chat: ${chatName}`)
 
@@ -151,6 +153,39 @@ const main = async () => {
         await driver.sleep(3000)
 
         // END Saving Gallery Photos ---------------------------------------------------------
+        // BEGIN Sending Download Info To That GroupMe ---------------------------------------
+
+        // Send the execution time, image count, and video count to the groupme
+        // for confirmation it saved all gallery data
+        if(sendInfo){
+
+            // Click Current Media button
+            await waitUntilClickable(driver, `[class="close accessible-focus-dark"][ng-click="$close()"]`)
+            const currMediaButton = await driver.findElement(By.css(`[class="close accessible-focus-dark"][ng-click="$close()"]`))
+            await currMediaButton.click()
+
+            // Click Close Gallery button
+            await waitUntilClickable(driver, `[class="close accessible-focus"]`)
+            const closeGalleryButton = await driver.findElement(By.css(`[class="close accessible-focus"]`))
+            await closeGalleryButton.click()
+
+            // Type Execution Data in Send Messege Field
+            const end = new Date()
+            var executionTime = (end - start) / 1000
+            const dataSent = `groupme-gallery-downloader: Execution Time: ${executionTime} seconds, Images saved: ${imageCount}, Videos saved: ${videoCount}`
+            
+            await waitUntilClickable(driver, `[aria-label="Start typing and press enter to send"]`)
+            const sendMsgField = await driver.findElement(By.css(`[aria-label="Start typing and press enter to send"]`))
+            await sendMsgField.sendKeys(dataSent)
+
+            // Click Send Messeage to GroupMe
+            await sendMsgField.sendKeys(Key.ENTER)
+
+            // Wait to confirm the msg sent
+            await driver.sleep(1000)
+        }
+        // END Sending Download Info To That GroupMe ---------------------------------------
+
         // CLOSE driver
         await driver.close()
         await driver.quit()

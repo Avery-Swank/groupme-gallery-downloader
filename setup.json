@@ -1,4 +1,5 @@
 {
     "browserType": "chrome",
-    "chatName": ""
+    "chatName": "THE MF BACHELOR",
+    "sendInfoToChat": false
 }
