@@ -56,7 +56,7 @@ const main = async () => {
     
         // BEGIN Login into a groupme account ------------------------------------------------
         const driver = await new Builder().forBrowser(browserType)
-                                      .build()
+            .build()
 
         // Open Browser
         await driver.get(`https://web.groupme.com/chats`)
@@ -114,32 +114,31 @@ const main = async () => {
                     try{
                         image = await driver.findElement(By.xpath(`//div[@class="media-wrap"]/img`))
                         imageCount++
-                    } catch(e) {}
+                    } catch(e) { /* loop and try again or current media is not a image*/ }
     
                     try{
                         video = await driver.findElement(By.xpath(`//div[@class="video-wrap"]/video`))
                         videoCount++
-                    } catch(e) {}
+                    } catch(e) { /* loop and try again or current media is not a video */ }
 
                     if(!(image == null && video == null)){
                         break
                     }
                 }
 
-                if(image != null)
-                    console.log(`groupme-gallery-downloader: Gallery Media Index ${mediaCount} - Image Saved`)
-
-                if(video != null)
-                    console.log(`groupme-gallery-downloader: Gallery Media Index ${mediaCount} - Video Saved`)
-
                 // Click Download button
                 await waitUntilClickable(driver, `[ng-click="download()"]`)
                 const downloadButton = await driver.findElement(By.css(`[ng-click="download()"]`))
                 await downloadButton.click()
+                await driver.sleep((Math.random() * 5000))    // Download buffer
+
+                console.log(`groupme-gallery-downloader: Media Downloaded: ${mediaCount}`)
 
                 // Click Next-Media button
                 const nextButton = await driver.findElement(By.css(`[ng-click="next(); $event.stopPropagation();"]`))
                 await nextButton.click()
+
+                await driver.sleep(500) // Loading next media buffer 
 
                 mediaCount++
             } catch (e) {
@@ -194,7 +193,7 @@ const main = async () => {
         await driver.close()
         await driver.quit()
 
-        console.log(`groupme-gallery-downloader error: ${e}`)
+        console.log(`groupme-gallery-downloader: ${e}`)
     }
 
     const end = new Date()
