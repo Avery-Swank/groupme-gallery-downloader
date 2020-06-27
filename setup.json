@@ -1,5 +1,5 @@
 {
     "browserType": "chrome",
-    "chatName": "Miller Swank children",
-    "sendInfoToChat": true
+    "chatName": "Right side",
+    "sendInfoToChat": false
 }

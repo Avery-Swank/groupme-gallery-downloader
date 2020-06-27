@@ -3,6 +3,9 @@ const { Builder, By } = require('selenium-webdriver')
 const { Key } = require('selenium-webdriver/lib/input')
 const { chromedriver } = require('chromedriver')
 
+const fs = require('fs')
+const request = require('request')
+
 /**
  * @function waitUntilClickable
  * @description Wait until an element can be clickable. Is great for waiting for front-end pages to load. 
@@ -27,12 +30,23 @@ const waitUntilClickable = async(driver = {}, path = ``) => {
 }
 
 /**
+ * @function download
+ * @description Download a media item using request and fs libraries
+ * @param {*} url 
+ * @param {*} path 
+ */
+const downloadImage = async (url, path) => {
+    await request.head(url, async (err, res, body) => {
+      await request(url)
+        .pipe(await fs.createWriteStream(path))
+    })
+}
+
+/**
  * @function main
  * @description Run the main program to save all Groupme Gallery photos that mimicks that of a front-end user
  */
 const main = async () => {
-
-    console.log("Running main...")
 
     // Read the data from "setup.json"
     const setupData = require('./setup.json')
@@ -40,17 +54,11 @@ const main = async () => {
     const chatName = setupData.chatName
     const sendInfo = setupData.sendInfoToChat
 
-    if(browserType.length == 0 || chatName.length == 0){
-        console.log(`Invalid Setup data. \n ${JSON.stringify(setupData)}`)
-        return null
-    }
-
-    console.log(`Running groupme-gallery-downloader with data: \n ${JSON.stringify(setupData)}`)
-
     const start = new Date()
-    var mediaCount = 0
     var imageCount = 0
     var videoCount = 0
+
+    console.log(`groupme-gallery-downloader: Setup data: ${JSON.stringify(setupData)}`)
 
     try{
     
@@ -63,93 +71,103 @@ const main = async () => {
 
         // At this point, the user logins into their GroupMe account by hand. Then there is no need
         // to manage a username and password
-        
+
         // END Login into a groupme account --------------------------------------------------
         // BEGIN Navigate to GroupMe Gallery -------------------------------------------------
 
         // Search Group
+        console.log(`groupme-gallery-downloader: Searching group: ${chatName}`)
         await waitUntilClickable(driver, `[placeholder="Search chats"]`)
         const groupsSearch = await driver.findElement(By.css(`[placeholder="Search chats"]`))
         await groupsSearch.sendKeys(chatName)
 
         // Click Group
+        console.log(`groupme-gallery-downloader: Clicking group: ${chatName}`)
         await waitUntilClickable(driver, `[ng-if="filteredChats.length"]`)
         const desiredGroup = await driver.findElement(By.css(`[ng-if="filteredChats.length"]`))
         await desiredGroup.click()
 
         // Click Group Header Dropdown
+        console.log(`groupme-gallery-downloader: Clicking ${chatName}'s Settings`)
         await waitUntilClickable(driver, `[class="accessible-focus menu-toggle dropdown-toggle"]`)
         const groupDropdown = await driver.findElement(By.css(`[class="accessible-focus menu-toggle dropdown-toggle"]`))
         await groupDropdown.click()
 
         // Click Gallery
+        console.log(`groupme-gallery-downloader: Clicking ${chatName}'s Gallery`)
         await waitUntilClickable(driver, `[ng-click="showGallery()"]`)
         const galleryButton = await driver.findElement(By.css(`[ng-click="showGallery()"]`))
         await galleryButton.click()
         // END Navigate to GroupMe Gallery ---------------------------------------------------
         // BEGIN Saving Gallery Media -------------------------------------------------------
 
-        console.log(`groupme-gallery-downloader: Clicked gallery in group chat: ${chatName}`)
-
-        // Click the first image
-        await waitUntilClickable(driver, `[class="img-wrap accessible-focus"]`)
-        const firstImage = await driver.findElement(By.css(`[class="img-wrap accessible-focus"]`))
-        await firstImage.click()
-        
-        // Will continually add images until there is no 'next button'
-        // ie there are no more images
-        while(true){
+        // Click "Load More" until all of the media in the groupme are there on the page
+        while(true) {
+            // Let the media load
+            await driver.sleep(5000)
 
             try{
-                var image = null
-                var video = null
-
-                // Wait for image or video to show
-                await waitUntilClickable(driver, `[class="current-media"]`)
-                
-                // Check if the media is a image or a video and grab the src accordingly
-                // Otherwise wait and try again because it is a given that something will show up
-                // Helps slow down execution
-                while(true){
-                    try{
-                        image = await driver.findElement(By.xpath(`//div[@class="media-wrap"]/img`))
-                        imageCount++
-                    } catch(e) { /* loop and try again or current media is not a image*/ }
-    
-                    try{
-                        video = await driver.findElement(By.xpath(`//div[@class="video-wrap"]/video`))
-                        videoCount++
-                    } catch(e) { /* loop and try again or current media is not a video */ }
-
-                    if(!(image == null && video == null)){
-                        break
-                    }
-                }
-
-                // Click Download button
-                await waitUntilClickable(driver, `[ng-click="download()"]`)
-                const downloadButton = await driver.findElement(By.css(`[ng-click="download()"]`))
-                await downloadButton.click()
-                await driver.sleep((Math.random() * 5000))    // Download buffer
-
-                console.log(`groupme-gallery-downloader: Media Downloaded: ${mediaCount}`)
-
-                // Click Next-Media button
-                const nextButton = await driver.findElement(By.css(`[ng-click="next(); $event.stopPropagation();"]`))
-                await nextButton.click()
-
-                await driver.sleep(500) // Loading next media buffer 
-
-                mediaCount++
+                const loadMoreButton = await driver.findElement(By.css(`[ng-click="loadNextPage()"]`))
+                await loadMoreButton.click()
+                console.log(`groupme-gallery-downloader: Loading More Media`)
             } catch (e) {
-                console.log(`groupme-gallery-downloader: All media have been saved`)
+                // Loaded all pictures
+                // Wait for last of media to load
+                console.log(`groupme-gallery-downloader: Loaded All GroupMe Media`)
+                await driver.sleep(5000)
                 break
             }
         }
 
-        // At this point, it is possible the driver closes before the last media file is downloaded. To ensure
-        // that the last media downloads, wait for a static amount of time
-        await driver.sleep(3000)
+        // Get all media items on the page
+        // Because the Gallery can store all of the image urls on the same page, we can just grab all the image urls at once
+        const media = await driver.findElements(By.xpath(`//*[@ng-repeat="item in items"]//img`))
+
+        for(const mediaIter of media) {
+            var mediaSrc = await mediaIter.getAttribute(`src`)
+
+            // Remove preview suffix so images are to full scale
+            mediaSrc = await mediaSrc.replace(`.preview`, ``)
+
+            const isImage = await mediaSrc.includes(`i.groupme.com`)
+            const isVideo = await mediaSrc.includes(`v.groupme.com`)
+
+            // Save all images using the image src url
+            if(isImage) {
+                const fileName = await mediaSrc.split(`.`)[mediaSrc.split(`.`).length-1]
+                const path = `./gallery/${fileName}.png`
+              
+                await downloadImage(mediaSrc, path)
+                console.log(`groupme-gallery-downloader: Downloaded image ${fileName}.png`)
+                imageCount++
+            }
+
+            // Save all videos by clicking download on them
+            if(isVideo) {
+                // Click video
+                const videoButton = await mediaIter.findElement(By.xpath("./.."))
+                await videoButton.click()
+
+                // Wait for video to load
+                await driver.sleep(3000)
+
+                // Click download
+                await waitUntilClickable(driver, `[ng-click="download()"]`)
+                const downloadButton = await driver.findElement(By.css(`[ng-click="download()"]`))
+                await downloadButton.click()
+
+                // Wait for video to download
+                await driver.sleep(3000)
+
+                // Click exit
+                await waitUntilClickable(driver, `//*[@class="zoom-layout"]//button[@ng-click="$close()"]`)
+                const exitButton = await driver.findElement(By.xpath(`//*[@class="zoom-layout"]//button[@ng-click="$close()"]`))
+                await exitButton.click()
+              
+                console.log(`groupme-gallery-downloader: Downloaded video in C:/Downloads`)
+                videoCount++
+            }
+        }
 
         // END Saving Gallery Photos ---------------------------------------------------------
         // BEGIN Sending Download Info To That GroupMe ---------------------------------------
@@ -158,14 +176,9 @@ const main = async () => {
         // for confirmation it saved all gallery data
         if(sendInfo){
 
-            // Click Current Media button
-            await waitUntilClickable(driver, `[class="close accessible-focus-dark"][ng-click="$close()"]`)
-            const currMediaButton = await driver.findElement(By.css(`[class="close accessible-focus-dark"][ng-click="$close()"]`))
-            await currMediaButton.click()
-
             // Click Close Gallery button
-            await waitUntilClickable(driver, `[class="close accessible-focus"]`)
-            const closeGalleryButton = await driver.findElement(By.css(`[class="close accessible-focus"]`))
+            await waitUntilClickable(driver, `[id="CloseGalleryBtn"]`)
+            const closeGalleryButton = await driver.findElement(By.css(`[id="CloseGalleryBtn"`))
             await closeGalleryButton.click()
 
             // Type Execution Data in Send Messege Field
@@ -190,9 +203,6 @@ const main = async () => {
         await driver.quit()
 
     } catch (e){
-        await driver.close()
-        await driver.quit()
-
         console.log(`groupme-gallery-downloader: ${e}`)
     }
 
