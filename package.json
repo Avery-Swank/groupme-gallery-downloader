@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "main": "app.js",
     "dependencies": {
-        "chromedriver": "^83.0.0",
+        "chromedriver": "^85.0.1",
         "downloads-folder": "^1.0.2",
         "https": "^1.0.0",
         "request": "^2.88.2",
