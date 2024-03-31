@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "main": "app.js",
     "dependencies": {
-        "axios": "^0.24.0",
+        "axios": "^0.28.0",
         "chromedriver": "^95.0.0",
         "downloads-folder": "^1.0.2",
         "https": "^1.0.0",
